@@ -23,6 +23,7 @@
               <el-button type="warning">挂单</el-button>
               <el-button type="danger">删除</el-button>
               <el-button type="success" @click="save">结账</el-button>
+              <el-button type="success" @click="download">导出</el-button>
             </div>
           </el-tab-pane>
           <el-tab-pane label="挂单">挂单</el-tab-pane>
@@ -45,10 +46,10 @@
           <el-tabs>
             <el-tab-pane label="汉堡">
               <div>
-                <ul class="cook-list">
+                <ul class="cook-list" v-if="type0Goods.length>0">
                   <li v-for="(item,index) in type0Goods" :key="index">
                     <span class="food-img">
-                      <img :src="item.goodsImg" width="100%" />
+                      <img :src="item.goodsImg" alt="pic" width="100%" />
                     </span>
                     <span class="food-name">{{item.goodsName}}</span>
                     <span class="food-price">￥{{item.price}}元</span>
@@ -68,6 +69,8 @@
 
 <script>
 import axios from 'axios';
+import EXCEL from '@/common/excel';
+
 export default {
     name: 'pos',
     data () {
@@ -142,7 +145,10 @@ export default {
                 'https://www.fastmock.site/mock/0bf6a5bae7eab8507e44b56191ddff36/vuepos/typeGoods'
             )
             .then(response => {
-                this.type0Goods = response.data.data[1];
+                for (let i = 1; i < 4; i++) {
+                    this.type0Goods.push(response.data.data[0][i]);
+                }
+                return this.type0Goods;
             })
             .catch(error => {
                 console.log(error);
@@ -159,6 +165,16 @@ export default {
         //         message: '保存成功'
         //     });
         // },
+        download () {
+            let params = {};
+
+            this.$http.post('reports', params).then(res => {
+                console.log(res.data.data, 'res');
+                const data = res.data.data;
+
+                EXCEL.downloadExcel(data);
+            });
+        },
         save () {
             this.$http.post('categories', this.params).then(res => {
                 this.$router.push('/categories/list');
